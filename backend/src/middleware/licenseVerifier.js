@@ -53,8 +53,11 @@ export async function verifyLicenseMiddleware(req, res, next) {
     const token = authHeader.split(' ')[1];
     try {
       const decoded = verifyToken(token);
-      if (decoded && (decoded.role === 'admin' || decoded.role === 'developer')) {
-        return next();
+      if (decoded && decoded.role) {
+        const role = decoded.role.toLowerCase();
+        if (role === 'admin' || role === 'developer') {
+          return next();
+        }
       }
     } catch (e) {
       // Fallback to standard check on token decoding error
