@@ -1,0 +1,21 @@
+{
+  "name": "BLDE(DU) EDC — Clinical Research Platform",
+  "short_name": "BLDE EDC",
+  "description": "Complete Electronic Data Capture system for BLDE University clinical research",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f4f2ee",
+  "theme_color": "#8b1a1a",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='24' fill='%238b1a1a'/><path d='M48 96h96M96 48v96' stroke='white' stroke-width='16' stroke-linecap='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "productivity"],
+  "lang": "en",
+  "scope": "/"
+}

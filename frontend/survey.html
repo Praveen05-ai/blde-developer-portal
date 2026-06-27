@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BLDE(DU) — Patient Survey</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--red:#8b1a1a;--blue:#1a4a8b;--green:#1a6b3a;--bd:#e0ddd6;--tx:#1a1916;--tx2:#5a5750;--tx3:#8a8780;--font:'IBM Plex Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:#f4f2ee;min-height:100vh;padding:32px 16px}
+.wrap{max-width:660px;margin:0 auto}
+.header{background:#fff;border:1px solid var(--bd);border-top:10px solid var(--red);border-radius:8px;padding:24px 28px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.header h1{font-size:22px;font-weight:600;color:var(--tx)}.header p{font-size:13.5px;color:var(--tx2);margin-top:8px;line-height:1.4}
+.card{background:transparent;border:none;padding:0;box-shadow:none}
+.progress-card{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:20px 24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.progress{background:#e8e8e8;border-radius:4px;height:4px;overflow:hidden}
+.progress-bar{height:100%;background:var(--red);transition:width .3s;border-radius:4px}
+.fg{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}.fg.hf{display:none}
+.fg label{display:block;font-size:14px;font-weight:600;color:var(--tx);margin-bottom:10px}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border:1px solid #ccc9c0;border-radius:6px;font-family:var(--font);font-size:14px;color:var(--tx);outline:none}
+.fg input[type="radio"]{appearance:none;-webkit-appearance:none;width:20px!important;height:20px!important;border:2px solid #7a756b;border-radius:50%;outline:none;margin-top:1px;flex-shrink:0;cursor:pointer;transition:all 0.2s ease;background-color:#fff}
+.fg input[type="radio"]:checked{border-color:var(--red);background:radial-gradient(circle,var(--red) 40%,#fff 45%)}
+.fg input[type="radio"]:hover{border-color:var(--red)}
+.fg input[type="checkbox"]{appearance:none;-webkit-appearance:none;width:18px!important;height:18px!important;border:2px solid #7a756b;border-radius:4px;outline:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all 0.2s ease;background-color:#fff;margin-top:2px}
+.fg input[type="checkbox"]:checked{border-color:var(--red);background-color:var(--red)}
+.fg input[type="checkbox"]:checked::before{content:"✓";color:#fff;font-size:12px;font-weight:bold}
+.fg input[type="checkbox"]:hover{border-color:var(--red)}
+.fg input:focus,.fg select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(139,26,26,.08)}
+.fg textarea{resize:vertical;min-height:80px}
+.req{color:var(--red)}
+.radio-grp{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:6px 0}
+.radio-grp label{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;color:var(--tx);cursor:pointer;line-height:1.35;width:100%}
+.ferr{color:var(--red);font-size:12px;margin-top:4px}
+.err-inp{border-color:var(--red)!important}
+.calc-box{font-size:15px;font-weight:600;color:var(--red);padding:8px 12px;background:#fdf0f0;border-radius:6px;display:inline-block;min-width:80px;font-family:'IBM Plex Mono',monospace}
+.calc-note{font-size:11px;color:var(--tx3);margin-top:3px}
+.file-area{border:2px dashed #ccc9c0;border-radius:6px;padding:16px;text-align:center;cursor:pointer}
+.file-area:hover{border-color:var(--red);background:#fdf0f0}
+.file-area input{display:none}
+.btn{padding:11px 24px;border-radius:6px;font-family:var(--font);font-size:14px;font-weight:500;cursor:pointer;border:none}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{opacity:.9}
+.submit-card{background:#fff;border:1px solid var(--bd);border-radius:8px;padding:24px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.loading{text-align:center;padding:48px;color:var(--tx2)}
+.errbox{background:#fdf0f0;border:1px solid #f5c0c0;border-radius:8px;padding:24px;text-align:center;color:var(--red);display:none}
+.success{background:#eef7f1;border:1px solid #b2dba1;border-radius:8px;padding:40px;text-align:center;display:none}
+.success h2{color:var(--green);font-size:20px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="loading" class="loading">⏳ Loading survey…</div>
+  <div class="errbox" id="errbox"></div>
+  <div id="survey-wrap" style="display:none">
+    <div class="header"><h1 id="sv-label">Patient Survey</h1><p id="sv-proj">BLDE(DU) Research Platform</p></div>
+    <div class="card">
+      <div class="progress-card">
+        <div class="progress">
+          <div class="progress-bar" id="prog" style="width:0%"></div>
+        </div>
+      </div>
+      <div id="sv-fields"></div>
+      <div class="submit-card">
+        <div id="sv-errs" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-red" onclick="submitSurvey()" id="sub-btn">Submit Response</button>
+          <span id="sub-status" style="font-size:12px;color:var(--tx3)"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="success" id="sv-success">
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="margin-bottom:14px"><circle cx="28" cy="28" r="28" fill="#eef7f1"/><path d="M16 28l9 9 15-15" stroke="#1a6b3a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h2>Thank you!</h2>
+    <p>Your response has been submitted successfully.</p>
+    <p id="success-rid" style="font-size:12px;color:var(--tx3);margin-top:8px;font-family:'IBM Plex Mono',monospace"></p>
+    <p style="margin-top:12px;font-size:13px;color:var(--tx2)">You may close this window.</p>
+  </div>
+</div>
+<script>
+// ── GxP Version-Based Browser Cache Eviction & PWA Service Worker Registration ──
+const CURRENT_VERSION = '25.0';
+const savedVersion = localStorage.getItem('blde_app_version');
+
+if (savedVersion !== CURRENT_VERSION) {
+  console.log('[CacheEvict] Upgraded version detected. Evicting old PWA caches...');
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for (let registration of registrations) {
+        registration.unregister().then(() => {
+          console.log('[CacheEvict] Unregistered old Service Worker');
+        });
+      }
+    });
+  }
+  if ('caches' in window) {
+    caches.keys().then(function(names) {
+      for (let name of names) {
+        caches.delete(name).then(() => {
+          console.log('[CacheEvict] Deleted cache container:', name);
+        });
+      }
+    });
+  }
+  localStorage.setItem('blde_app_version', CURRENT_VERSION);
+  console.log('[CacheEvict] Cache cleared and version set to ' + CURRENT_VERSION);
+} else {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        console.log('[PWA] ServiceWorker registered successfully for offline support:', reg.scope);
+      }).catch(err => {
+        console.log('[PWA] ServiceWorker registration failed:', err);
+      });
+    });
+  }
+}
+
+const API = (window.location.protocol === 'file:') ? 'http://localhost:3002/api' : '/api';
+const token=new URLSearchParams(location.search).get('token');
+let surveyData=null;
+
+async function load(){
+  if(!token){showErr('No survey token in URL.');return;}
+  try{
+    const r=await fetch(API+'/survey/'+token).then(x=>x.json());
+    if(r.error){showErr(r.error);return;}
+    surveyData=r;
+    document.getElementById('sv-label').textContent=r.label||'Patient Survey';
+    document.getElementById('sv-proj').textContent=r.project_title||'BLDE(DU) Research';
+    document.title=(r.label||'Survey')+' — BLDE(DU)';
+    renderFields(r.instrument.fields);
+    document.getElementById('loading').style.display='none';
+    document.getElementById('survey-wrap').style.display='block';
+  }catch(e){showErr('Cannot connect to server. Please try again later.');}
+}
+
+function renderFields(fields){
+  document.getElementById('sv-fields').innerHTML=fields.map(f=>{
+    const id='svf_'+f.id;let inp='';
+    if(f.type==='text')inp=`<input type="text" id="${id}" placeholder="Enter ${f.label.toLowerCase()}"/>`;
+    else if(f.type==='number')inp=`<input type="number" id="${id}" placeholder="0"/>`;
+    else if(f.type==='date')inp=`<input type="date" id="${id}"/>`;
+    else if(f.type==='textarea')inp=`<textarea id="${id}" rows="4" placeholder="Your answer…"></textarea>`;
+    else if(f.type==='radio')inp=`<div class="radio-grp" id="${id}">${(f.options||[]).map(o=>`<label><input type="radio" name="${id}" value="${o}"> ${o}</label>`).join('')}</div>`;
+    else if(f.type==='select')inp=`<select id="${id}"><option value="">— Select —</option>${(f.options||[]).map(o=>`<option>${o}</option>`).join('')}</select>`;
+    else if(f.type==='checkbox')inp=`<label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="${id}"> ${f.label}</label>`;
+    else if(f.type==='calc')inp=`<div class="calc-box" id="${id}">—</div><div class="calc-note">Auto-calculated: ${f.formulaDisplay||f.formula||''}</div>`;
+    else if(f.type==='file')inp=`<input type="hidden" id="${id}" value=""/><div class="file-area" onclick="document.getElementById('sff_${f.id}').click()"><input type="file" id="sff_${f.id}" style="display:none" accept="${f.accept&&f.accept!=='*'?f.accept:''}" onchange="uploadSurveyFile(this,'${f.id}')"/><div style="font-size:13px;color:var(--tx3)">📎 Click to attach · ${f.accept&&f.accept!=='*'?f.accept:'All types'}</div></div><div id="effl_${f.id}"></div>`;
+    else inp=`<input type="text" id="${id}"/>`;
+    const lbl=f.type!=='checkbox'?`<label for="${id}">${f.label}${f.required?'<span class="req"> *</span>':''}</label>`:'';
+    return`<div class="fg" id="sfg_${f.id}">${lbl}${inp}<div class="ferr" id="sfe_${f.id}"></div></div>`;
+  }).join('');
+  fields.forEach(f=>{if(f.branching)setupBranching(f,fields);if(f.type==='calc')setupCalc(f,fields);});
+  updateProgress(fields);
+}
+
+function getVal(f){
+  if(f.type==='radio'){const r=document.querySelector(`input[name="svf_${f.id}"]:checked`);return r?r.value:'';}
+  if(f.type==='checkbox'){const el=document.getElementById('svf_'+f.id);return el?el.checked:false;}
+  if(f.type==='calc')return null;
+  const el=document.getElementById('svf_'+f.id);return el?el.value:'';
+}
+
+async function uploadSurveyFile(input, fieldId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const list = document.getElementById('effl_' + fieldId);
+  let progressIndicator = null;
+  if (list) {
+    progressIndicator = document.createElement('div');
+    progressIndicator.style.fontSize = '12px';
+    progressIndicator.style.color = 'var(--red)';
+    progressIndicator.style.marginTop = '4px';
+    progressIndicator.innerHTML = `⏳ Uploading ${file.name}...`;
+    list.appendChild(progressIndicator);
+  }
+
+  const form = new FormData();
+  form.append('file', file);
+
+  try {
+    const r = await fetch(API + '/survey/' + token + '/attachments', {
+      method: 'POST',
+      body: form
+    }).then(x => x.json());
+
+    if (progressIndicator) progressIndicator.remove();
+    if (r.error) {
+      alert(r.error);
+      return;
+    }
+
+    // Update hidden input
+    const inputEl = document.getElementById('svf_' + fieldId);
+    if (inputEl) {
+      let files = [];
+      try {
+        files = JSON.parse(inputEl.value || '[]');
+      } catch (e) {}
+      files.push({ original_name: r.original_name, url: r.url });
+      inputEl.value = JSON.stringify(files);
+    }
+
+    if (list) {
+      const itemHtml = `
+        <div style="display:flex;align-items:center;gap:7px;background:var(--sf2);border-radius:4px;padding:4px 8px;margin-top:3px;font-size:12px">
+          📄 <span style="flex:1;font-family:var(--mono);font-size:11px">${r.original_name}</span>
+          <a href="${r.url}" target="_blank" style="color:var(--red);text-decoration:none;font-weight:500">View</a>
+          <button type="button" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 4px" onclick="removeSurveyFile('${fieldId}', '${r.url}')">×</button>
+        </div>
+      `;
+      list.insertAdjacentHTML('beforeend', itemHtml);
+    }
+    if (surveyData) updateProgress(surveyData.instrument.fields);
+  } catch (e) {
+    if (progressIndicator) progressIndicator.remove();
+    alert('Upload failed: ' + e.message);
+  }
+}
+
+function removeSurveyFile(fieldId, fileUrl) {
+  const inputEl = document.getElementById('svf_' + fieldId);
+  if (!inputEl) return;
+  try {
+    let files = JSON.parse(inputEl.value || '[]');
+    files = files.filter(f => f.url !== fileUrl);
+    inputEl.value = JSON.stringify(files);
+    
+    const list = document.getElementById('effl_' + fieldId);
+    if (list) {
+      list.innerHTML = files.map(file => `
+        <div style="display:flex;align-items:center;gap:7px;background:var(--sf2);border-radius:4px;padding:4px 8px;margin-top:3px;font-size:12px">
+          📄 <span style="flex:1;font-family:var(--mono);font-size:11px">${file.original_name}</span>
+          <a href="${file.url}" target="_blank" style="color:var(--red);text-decoration:none;font-weight:500">View</a>
+          <button type="button" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:0 4px" onclick="removeSurveyFile('${fieldId}', '${file.url}')">×</button>
+        </div>
+      `).join('');
+    }
+    if (surveyData) updateProgress(surveyData.instrument.fields);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function setupBranching(f,allFields){
+  const{field:bf,operator,value:bv,action}=f.branching;
+  function upd(){
+    const rch=document.querySelector(`input[name="svf_${bf}"]:checked`);
+    const dep=document.getElementById('svf_'+bf);
+    let dv=rch?rch.value:dep?dep.value:'';
+    const match=operator==='='?dv===bv:operator==='!='?dv!==bv:operator==='>'?parseFloat(dv)>parseFloat(bv):operator==='<'?parseFloat(dv)<parseFloat(bv):false;
+    const show=(action==='show'&&match)||(action==='hide'&&!match);
+    const fg=document.getElementById('sfg_'+f.id);if(fg)fg.classList.toggle('hf',!show);
+    updateProgress(allFields);
+  }
+  document.querySelectorAll(`#svf_${bf},input[name="svf_${bf}"]`).forEach(el=>el.addEventListener('change',upd));upd();
+}
+
+function setupCalc(cf,allFields){
+  function rc(){
+    if(!cf.formula)return;
+    const scope={};allFields.forEach(ff=>{if(ff.type!=='calc'){const v=parseFloat(getVal(ff));scope[ff.id]=isNaN(v)?0:v;}});
+    try{
+      let formula=cf.formula;Object.entries(scope).forEach(([k,v])=>formula=formula.replace(new RegExp('\\b'+k+'\\b','g'),v));
+      if(/[^0-9\.\+\-\*\/\(\)\s]/.test(formula))return;
+      let val=Function('"use strict";return ('+formula+')')();
+      if(!isFinite(val))val=null;else if(cf.decimalPlaces!==undefined)val=parseFloat(val.toFixed(cf.decimalPlaces));
+      const el=document.getElementById('svf_'+cf.id);if(el)el.textContent=val!==null?val:'—';
+    }catch{}
+  }
+  allFields.forEach(ff=>{if(ff.type!=='calc'&&ff.type!=='file'){const el=document.getElementById('svf_'+ff.id);if(el)el.addEventListener('input',rc);document.querySelectorAll(`input[name="svf_${ff.id}"]`).forEach(r=>r.addEventListener('change',rc));}});rc();
+}
+
+function updateProgress(fields){
+  const vis=fields.filter(f=>{const fg=document.getElementById('sfg_'+f.id);return fg&&!fg.classList.contains('hf')&&f.type!=='calc'&&f.required;});
+  const filled=vis.filter(f=>{const v=getVal(f);return v!==''&&v!==null&&v!==false&&v!=='[]';});
+  const pct=vis.length?Math.round((filled.length/vis.length)*100):0;
+  const bar=document.getElementById('prog');if(bar)bar.style.width=pct+'%';
+  const st=document.getElementById('sub-status');if(st)st.textContent=vis.length?`${filled.length} of ${vis.length} required fields completed`:'';
+}
+
+async function submitSurvey(){
+  const fields=surveyData.instrument.fields;const data={};fields.forEach(f=>{const v=getVal(f);if(v!==null)data[f.id]=v;});
+  document.querySelectorAll('.ferr').forEach(e=>e.textContent='');document.querySelectorAll('.err-inp').forEach(e=>e.classList.remove('err-inp'));
+  const btn=document.getElementById('sub-btn');btn.textContent='Submitting…';btn.disabled=true;
+  try{
+    const r=await fetch(API+'/survey/'+token,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({data})}).then(x=>x.json());
+    if(r.errors){r.errors.forEach(err=>{fields.forEach(f=>{if(err.includes(f.label)){const fe=document.getElementById('sfe_'+f.id);if(fe)fe.textContent=err;const el=document.getElementById('svf_'+f.id);if(el)el.classList.add('err-inp');}});});btn.textContent='Submit Response';btn.disabled=false;document.querySelector('.ferr:not(:empty)')?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+    if(r.error){document.getElementById('sv-errs').innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px 0">⚠ ${r.error}</div>`;btn.textContent='Submit Response';btn.disabled=false;return;}
+    document.getElementById('survey-wrap').style.display='none';document.getElementById('sv-success').style.display='block';document.getElementById('success-rid').textContent='Reference: '+(r.record_id||'');window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){document.getElementById('sv-errs').innerHTML=`<div style="color:var(--red);font-size:13px;padding:8px 0">⚠ Connection error.</div>`;btn.textContent='Submit Response';btn.disabled=false;}
+}
+
+function showErr(msg){document.getElementById('loading').style.display='none';const eb=document.getElementById('errbox');eb.textContent=msg;eb.style.display='block';}
+document.addEventListener('input',()=>{if(surveyData)updateProgress(surveyData.instrument.fields);});
+document.addEventListener('change',()=>{if(surveyData)updateProgress(surveyData.instrument.fields);});
+load();
+</script>
+</body>
+</html>

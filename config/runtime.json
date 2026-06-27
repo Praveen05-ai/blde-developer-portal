@@ -1,0 +1,14 @@
+{
+    "deployment_profile": "university",
+    "database_mode": "pg",
+    "backend_mode": "native",
+    "port": 3003,
+    "storage_root": "./storage",
+    "updates_mode": "offline",
+    "app_version": "1.0.0",
+    "migration_version": "20260529101000",
+    "features": {
+        "enable_ai": false,
+        "enable_orthanc": false
+    }
+}

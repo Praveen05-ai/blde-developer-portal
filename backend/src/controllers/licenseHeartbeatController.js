@@ -1,0 +1,182 @@
+import db from '../db/connection.js';
+import crypto from 'crypto';
+
+const DEFAULT_SECRET = 'blde_edc_licensing_gxp_secret_lock_2026';
+
+export async function handleHeartbeat(req, res) {
+  const {
+    license_id,
+    machine_hash,
+    software_version,
+    schema_version,
+    fingerprint_version,
+    api_version,
+    license_version
+  } = req.body;
+
+  if (!license_id) {
+    return res.status(400).json({ error: 'Missing license_id parameter.' });
+  }
+
+  try {
+    // 1. Resolve license record
+    let license = await db('licenses').where({ license_id_str: license_id }).first();
+    if (!license) {
+      // Fallback to numeric lookup
+      const numericId = parseInt(license_id, 10);
+      if (!isNaN(numericId)) {
+        license = await db('licenses').where({ id: numericId }).first();
+      }
+    }
+
+    if (!license) {
+      return res.status(404).json({ error: 'License not found.' });
+    }
+
+    const secret = process.env.JWT_SECRET || DEFAULT_SECRET;
+    const serverTime = new Date().toISOString();
+    const nonce = crypto.randomBytes(8).toString('hex');
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes validity
+
+    // Base response payload
+    const responsePayload = {
+      response_version: 'v1',
+      status: 'active',
+      reason: '',
+      next_check_in: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+      grace_days: license.offline_grace_days || 30,
+      server_time: serverTime,
+      nonce,
+      expires_at: expiresAt,
+      command: 'none',
+      update_required: false,
+      minimum_supported_version: '1.0.0',
+      emergency_override: false,
+      override_until: null
+    };
+
+    // 2. Compatibility checking
+    if (software_version === 'outdated') {
+      responsePayload.update_required = true;
+      responsePayload.minimum_supported_version = '2.0.0';
+      responsePayload.status = 'disabled';
+      responsePayload.reason = 'Software update required.';
+      
+      const payloadSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(responsePayload)).digest('hex');
+      responsePayload.signature = payloadSignature;
+      return res.json(responsePayload);
+    }
+
+    // 3. Evaluate Emergency Override state
+    if (license.emergency_override) {
+      const overrideLimit = new Date(license.override_until);
+      if (new Date() <= overrideLimit) {
+        responsePayload.emergency_override = true;
+        responsePayload.override_until = license.override_until;
+        responsePayload.status = 'active';
+        responsePayload.reason = 'Emergency override bypass active.';
+        
+        const payloadSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(responsePayload)).digest('hex');
+        responsePayload.signature = payloadSignature;
+        return res.json(responsePayload);
+      }
+    }
+
+    // 4. Validate Machine Hash Lock
+    if (license.machine_binding_status === 'bound' && license.machine_hash) {
+      if (machine_hash !== license.machine_hash) {
+        responsePayload.status = 'machine_mismatch';
+        responsePayload.reason = 'Machine mismatch. This license belongs to another computer.';
+        
+        const payloadSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(responsePayload)).digest('hex');
+        responsePayload.signature = payloadSignature;
+        return res.json(responsePayload);
+      }
+    }
+
+    // 5. Evaluate License Remote/Base Status
+    const statusToCheck = license.remote_status || license.status;
+    responsePayload.status = statusToCheck;
+    responsePayload.reason = license.remote_status_reason || '';
+
+    // 6. Look for Pending Remote Commands
+    const pendingCommand = await db('license_remote_commands')
+      .where({ license_id: license.id, status: 'pending' })
+      .orderBy('id', 'asc')
+      .first();
+
+    if (pendingCommand) {
+      responsePayload.command = pendingCommand.command;
+      responsePayload.reason = pendingCommand.notes || '';
+    }
+
+    // 7. Cryptographically Sign response using HMAC-SHA256
+    const payloadSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(responsePayload)).digest('hex');
+    responsePayload.signature = payloadSignature;
+
+    // Log check-in server side
+    await db('license_server_logs').insert({
+      license_id: license.id,
+      license_key: license.license_key,
+      machine_hash: machine_hash || 'unknown',
+      request_type: 'heartbeat',
+      response_status: 'success',
+      response_message: `Heartbeat success. Returning status: ${responsePayload.status}. Command: ${responsePayload.command}`,
+      created_at: new Date()
+    }).catch(() => {});
+
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error('Server heartbeat processing error:', err);
+    return res.status(500).json({ error: 'Server heartbeat processing failed.' });
+  }
+}
+
+export async function handleCommandAcknowledgement(req, res) {
+  const { license_id, command, result, signature } = req.body;
+
+  if (!license_id || !command || !result || !signature) {
+    return res.status(400).json({ error: 'Missing acknowledgment parameters.' });
+  }
+
+  try {
+    let license = await db('licenses').where({ license_id_str: license_id }).first();
+    if (!license) {
+      const numericId = parseInt(license_id, 10);
+      if (!isNaN(numericId)) {
+        license = await db('licenses').where({ id: numericId }).first();
+      }
+    }
+
+    if (!license) {
+      return res.status(404).json({ error: 'License not found.' });
+    }
+
+    // Verify signature
+    const secret = process.env.JWT_SECRET || DEFAULT_SECRET;
+    const payloadToVerify = {
+      license_id,
+      command,
+      result,
+      timestamp: req.body.timestamp
+    };
+
+    const expectedSig = crypto.createHmac('sha256', secret).update(JSON.stringify(payloadToVerify)).digest('hex');
+    if (expectedSig !== signature) {
+      return res.status(403).json({ error: 'Signature verification failed.' });
+    }
+
+    // Update command status in history
+    await db('license_remote_commands')
+      .where({ license_id: license.id, command, status: 'pending' })
+      .update({
+        status: result === 'success' ? 'success' : 'failure',
+        executed_at: new Date()
+      });
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Command acknowledgment error:', err);
+    return res.status(500).json({ error: 'Command acknowledgment processing failed.' });
+  }
+}

@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+desktop/src-tauri/target/
+
+# Windows-specific installers, desktop shells, and services (Not needed for cloud)
+dependencies/
+installer/
+desktop/
+native/
+
+# Local databases and backups (Universally ignore across any directory)
+**/storage/
+**/database/*.sqlite
+**/database/*.sqlite-shm
+**/database/*.sqlite-wal
+**/logs/
+**/uploads/
+**/temp/
+
+# Environment and configurations
+.env
+**/env
+**/.env
+config/runtime.json.sha256
+backend/config/runtime.json.sha256
+
+# Temporary files
+temp_packaging/
+temp_verif/
+verify_db_zip.*
+test_seed_prod.*
+
+# Security keys
+**/keys/private.pem
+**/keys/private*.pem
+*.pem
+!**/keys/public.pem
+!**/keys/public*.pem
