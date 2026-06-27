@@ -3,6 +3,7 @@ import db from '../db/connection.js';
 import { verifySignature, parseUsageLimits } from '../services/licenseService.js';
 import { getMachineFingerprint, safeCompare } from '../services/machineFingerprintService.js';
 import { performVerification } from '../services/onlineVerificationService.js';
+import { verifyToken } from '../utils/token.js';
 
 /**
  * Resolves the active license and decrypts/verifies its payload.
@@ -44,6 +45,20 @@ export async function verifyLicenseMiddleware(req, res, next) {
     path.includes('/billing-reports')
   ) {
     return next();
+  }
+
+  // Bypass license verification checks for administrators and developers
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = verifyToken(token);
+      if (decoded && (decoded.role === 'admin' || decoded.role === 'developer')) {
+        return next();
+      }
+    } catch (e) {
+      // Fallback to standard check on token decoding error
+    }
   }
 
   const context = await getLicenseContext();

@@ -5006,9 +5006,16 @@ const pageElements = {
 
 async function checkLicenseAndToggleBanner() {
   try {
-    const status = await api('/license-activation/status');
     const globalBanner = $('license-banner');
     if (!globalBanner) return;
+
+    // Do not show license verification warnings on the Developer side for administrators / developers
+    if (USER && (USER.role === 'admin' || USER.role === 'developer')) {
+      globalBanner.style.display = 'none';
+      return;
+    }
+
+    const status = await api('/license-activation/status');
     
     let warningMsg = '';
     if (status.verification_enabled) {
