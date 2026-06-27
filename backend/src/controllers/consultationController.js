@@ -67,12 +67,17 @@ export const getRequests = async (req, res, next) => {
       const url = `${env.centralSupportUrl}/api/support/sync/consultations?licenseId=${env.licenseKey}&email=${encodeURIComponent(req.user.email)}`;
       logger.info(`📡 [CONSULTATION CONTROL] Pulling consultation updates from: ${url}`);
       
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3-second timeout limit
+
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${env.licenseKey}`
-        }
+        },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const remoteTickets = await response.json();
