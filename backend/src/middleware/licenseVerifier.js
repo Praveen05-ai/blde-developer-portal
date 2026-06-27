@@ -27,6 +27,26 @@ export async function getLicenseContext() {
 }
 
 /**
+ * Helper: Checks if the request is authenticated with an admin or developer role.
+ */
+function isDeveloperOrAdmin(req) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = verifyToken(token);
+      if (decoded && decoded.role) {
+        const role = decoded.role.toLowerCase();
+        return (role === 'admin' || role === 'developer');
+      }
+    } catch (e) {
+      // Ignore token decoding error
+    }
+  }
+  return false;
+}
+
+/**
  * Global Middleware: Enforces license validity and Read-Only mode on expiration.
  */
 export async function verifyLicenseMiddleware(req, res, next) {
@@ -48,20 +68,8 @@ export async function verifyLicenseMiddleware(req, res, next) {
   }
 
   // Bypass license verification checks for administrators and developers
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split(' ')[1];
-    try {
-      const decoded = verifyToken(token);
-      if (decoded && decoded.role) {
-        const role = decoded.role.toLowerCase();
-        if (role === 'admin' || role === 'developer') {
-          return next();
-        }
-      }
-    } catch (e) {
-      // Fallback to standard check on token decoding error
-    }
+  if (isDeveloperOrAdmin(req)) {
+    return next();
   }
 
   const context = await getLicenseContext();
@@ -295,6 +303,9 @@ export async function verifyLicenseMiddleware(req, res, next) {
  * Middleware: Enforce Project Creation Limit
  */
 export async function checkProjectLimit(req, res, next) {
+  if (isDeveloperOrAdmin(req)) {
+    return next();
+  }
   const context = await getLicenseContext();
   if (context.error) {
     return res.status(403).json({ error: 'License verification failed.' });
@@ -325,6 +336,9 @@ export async function checkProjectLimit(req, res, next) {
  * Middleware: Enforce User Registration Limit
  */
 export async function checkUserLimit(req, res, next) {
+  if (isDeveloperOrAdmin(req)) {
+    return next();
+  }
   const context = await getLicenseContext();
   if (context.error) {
     return res.status(403).json({ error: 'License verification failed.' });
@@ -355,6 +369,9 @@ export async function checkUserLimit(req, res, next) {
  * Middleware: Enforce Form (Instrument) Creation Limit
  */
 export async function checkFormLimit(req, res, next) {
+  if (isDeveloperOrAdmin(req)) {
+    return next();
+  }
   const context = await getLicenseContext();
   if (context.error) {
     return res.status(403).json({ error: 'License verification failed.' });
@@ -385,6 +402,9 @@ export async function checkFormLimit(req, res, next) {
  * Middleware: Enforce Record Insertion Limit
  */
 export async function checkRecordLimit(req, res, next) {
+  if (isDeveloperOrAdmin(req)) {
+    return next();
+  }
   const context = await getLicenseContext();
   if (context.error) {
     return res.status(403).json({ error: 'License verification failed.' });
@@ -415,6 +435,9 @@ export async function checkRecordLimit(req, res, next) {
  * Middleware: Enforce File Upload and Storage Limits
  */
 export async function checkUploadLimits(req, res, next) {
+  if (isDeveloperOrAdmin(req)) {
+    return next();
+  }
   const context = await getLicenseContext();
   if (context.error) {
     if (req.file) {
