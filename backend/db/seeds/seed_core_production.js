@@ -45,9 +45,9 @@ export const seed = async function (knex) {
     }
   };
 
-  // 1. Seed Core Admin Users (if empty)
-  const existingUsers = await knex('users').select('id').limit(1);
-  if (existingUsers.length === 0) {
+  // 1. Seed Core Admin Users (if devadmin doesn't exist)
+  const devAdmin = await knex('users').where({ email: 'devadmin@blde.ac.in' }).first();
+  if (!devAdmin) {
     const hashedPassword = bcrypt.hashSync('Admin@123', 10);
     const hashedResearcherPassword = bcrypt.hashSync('Test@123', 10);
     await knex('users')
