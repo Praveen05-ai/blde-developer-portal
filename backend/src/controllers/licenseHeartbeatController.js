@@ -20,7 +20,13 @@ export async function handleHeartbeat(req, res) {
 
   try {
     // 1. Resolve license record
-    let license = await db('licenses').where({ license_id_str: license_id }).first();
+    let license;
+    if (license_id && license_id.length > 50) {
+      license = await db('licenses').where({ license_key: license_id }).first();
+    } else {
+      license = await db('licenses').where({ license_id_str: license_id }).first();
+    }
+    
     if (!license) {
       // Fallback to numeric lookup
       const numericId = parseInt(license_id, 10);
