@@ -11,7 +11,7 @@ import { verifyToken } from '../utils/token.js';
  */
 export async function getLicenseContext() {
   try {
-    const license = await db('licenses').orderBy('id', 'desc').first();
+    const license = await db('licenses').where({ id: 1 }).first();
     if (!license) {
       return { error: 'No license found.' };
     }
@@ -21,7 +21,7 @@ export async function getLicenseContext() {
     return { license, payload };
   } catch (err) {
     // Return the raw license record (if it exists) to allow logging verification failures
-    const license = await db('licenses').orderBy('id', 'desc').first().catch(() => null);
+    const license = await db('licenses').where({ id: 1 }).first().catch(() => null);
     return { license, error: err.message };
   }
 }
