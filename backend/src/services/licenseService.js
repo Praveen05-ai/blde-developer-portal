@@ -70,6 +70,39 @@ function getPrivateKey(kid = 'blde-key-2026-v1') {
       return fs.readFileSync(p, 'utf8');
     }
   }
+
+  // Fallback to inline default private key matching our generated key (blde-key-2026-v1)
+  if (kid === 'blde-key-2026-v1') {
+    return `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCzUSs+AQr2K0Dd
+Fzk0ASrub7ZfwanAYpwxw3fKQvTMDILUc+Zy0BRB1q8w/8n1gBIALPiyIHobt4Ai
+ngJbomqecviBYr1u6/nEREChiT7WECJudaku2+ZqR0lKm3I51yxKoj79pQiTorFV
+dk0DDyoX1nTIsJ7ehf2qWo+TSNdHg4qtDSlVY3NI6ZfrD5+pO9Cy/DfTT1hixj2S
+gre7XLrN4j6ReUnHH2P5vTmrsDyKELLgwkypUOB0b00d0XN0YAvpyhfdH+AU0lTs
+aiP3yKCYdZ3oTXPYIzMvljYsuthN0VPfqzeO5Om40pH9rsCP4CEqoouAUNAizYNG
+FMKj95N3AgMBAAECggEASwf/NpIcIpZFrV1ez65fZuayoo23+Gqqnb4DHUx3/vuL
+MNeQSWFc4JGyu6eEO6gLoCwxIeOqBHf7c0C3jt0+jK9h4U3OIyA1YhUHEDCL7OlS
+ZvLvyE42MylB9yhlGuO4wj/yaJLKLHBqkG6QWePaAqB3PFR/HXBmjIYZRpE3l1G0
+J7a8pTvhp6khsjunQkHo9R0fAFa96/qyFY701eCwwVX18HtI3nWHSfitMjKaS+79
++XoWK8E4zZVq+ebua5mI5anc+Cj6X7HdwxCPNCyI/EIhFd0B+CYKGxm9CILWTvV+
+c5aWG2c9WB6b/AtYO9d8TOMJKtmff663NCKkwxUNfQKBgQDySIry2Qf7ceXkxHYc
+a1HcbNMKOgB92RmTv2ona3DMuy2zqvhGk8PqF5b6qN9FOvE8lS/g+1ogMJ2LjPMG
+AVx13OYlo7B80TSz9OarRb+ptRYhFjrUEkTZ6geXkz+8pezK97agt3+fVketDnJE
+i5PfioLxKUlxXtyDfyYnfR2gTQKBgQC9eAtCAFJ/cqbMxxhir3trylETmHE1zaKU
+nxyErCjnJCt1gRPRVoUjPwhDkV6lEYs9eb+6hezjPLVZEmADjYlK3HcbslfQx99u
+A89Y2toRCK0agnNEBx93JfoWYANs22cSkKtJLPXwtdyG1kBtEa7LelSjBK2zTc35
+SSOTedhE0wKBgBywGkPHDvrm8aG04Ydb7cV73UFIvOYp3q1v7NHeFu0m/LJZfCxf
+MsN1J5tmg4lfAVF7GMA7AuDs4Lq1ZdFAOAJ8tYOfbjZZTzQ/u1BsYdVma8hfKXgS
+8bQb0epQtStROkiOLEG7eJEVVkdXfpA/NrMxY2/Kw7d41AN9+raSSf/BAoGBAKWX
+i09N9MxKqhmDUH6/nADjO+UCcL9zT8rRHR2fUchiRlFWVLm7AnWBm3liTfO615UN
+GVKtxhH8dwq4Eo5IX1u8P6VHQ5THezEtx0SDUd9dU909cfxctVVvLZnspFG5l+YT
+5n/3+aM9btWx33Dz6W8RJXOsnRt+vqxHDf7QmQHdAoGBAIi1ohfYkgYVvyFjcxw5
+FX7iTHKokudpauFWimjobifvHro7f6yh2xUHnLgYcSFEhPIPw3glxcTSQIVi79qa
+uILk6wzCtle8+wLWL7qXUshwIETeC1Yhw1rljj4yDwLHCsKvcv6sV/q9i6LhvkFv
+6P/P+XPLctvXjQ43Rmquu9D2
+-----END PRIVATE KEY-----`;
+  }
+
   throw new Error(`Private key for kid "${kid}" not found.`);
 }
 
