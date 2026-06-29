@@ -160,6 +160,37 @@ export const runPreflightChecks = async () => {
         logger.info('   -> Success: No orphaned projects found.');
       }
 
+      // Self-healing check to ensure 'customers' table has all required columns
+      logger.info('🔍 Self-healing: Checking customers table schema integrity...');
+      const hasCustomersTable = await db.schema.hasTable('customers');
+      if (hasCustomersTable) {
+        if (!await db.schema.hasColumn('customers', 'customer_id')) {
+          logger.info('   ⚙️ Adding missing "customer_id" column...');
+          await db.schema.alterTable('customers', (table) => { table.string('customer_id').unique().nullable(); });
+        }
+        if (!await db.schema.hasColumn('customers', 'contact_person')) {
+          logger.info('   ⚙️ Adding missing "contact_person" column...');
+          await db.schema.alterTable('customers', (table) => { table.string('contact_person').nullable(); });
+        }
+        if (!await db.schema.hasColumn('customers', 'email')) {
+          logger.info('   ⚙️ Adding missing "email" column...');
+          await db.schema.alterTable('customers', (table) => { table.string('email').nullable(); });
+        }
+        if (!await db.schema.hasColumn('customers', 'mobile')) {
+          logger.info('   ⚙️ Adding missing "mobile" column...');
+          await db.schema.alterTable('customers', (table) => { table.string('mobile').nullable(); });
+        }
+        if (!await db.schema.hasColumn('customers', 'notes')) {
+          logger.info('   ⚙️ Adding missing "notes" column...');
+          await db.schema.alterTable('customers', (table) => { table.text('notes').nullable(); });
+        }
+        if (!await db.schema.hasColumn('customers', 'archived')) {
+          logger.info('   ⚙️ Adding missing "archived" column...');
+          await db.schema.alterTable('customers', (table) => { table.boolean('archived').defaultTo(false); });
+        }
+        logger.info('   -> Success: Customers table schema is intact.');
+      }
+
       diagnostics.migrationsOk = true;
     } catch (err) {
       throw new Error(`Database migration audit failed: ${err.message}`);
