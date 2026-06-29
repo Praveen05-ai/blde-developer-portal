@@ -191,6 +191,61 @@ export const runPreflightChecks = async () => {
         logger.info('   -> Success: Customers table schema is intact.');
       }
 
+      // Self-healing check to ensure 'licenses' table has all required columns
+      logger.info('🔍 Self-healing: Checking licenses table schema integrity...');
+      const hasLicensesTable = await db.schema.hasTable('licenses');
+      if (hasLicensesTable) {
+        if (!await db.schema.hasColumn('licenses', 'license_id_str')) {
+          logger.info('   ⚙️ Adding missing "license_id_str" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('license_id_str').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'license_version')) {
+          logger.info('   ⚙️ Adding missing "license_version" column...');
+          await db.schema.alterTable('licenses', (table) => { table.integer('license_version').defaultTo(1); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'parent_license_id')) {
+          logger.info('   ⚙️ Adding missing "parent_license_id" column...');
+          await db.schema.alterTable('licenses', (table) => { table.integer('parent_license_id').references('id').inTable('licenses').onDelete('SET NULL').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'customer_id')) {
+          logger.info('   ⚙️ Adding missing "customer_id" column...');
+          await db.schema.alterTable('licenses', (table) => { table.integer('customer_id').references('id').inTable('customers').onDelete('SET NULL').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'machine_name')) {
+          logger.info('   ⚙️ Adding missing "machine_name" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('machine_name').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'last_validation_date')) {
+          logger.info('   ⚙️ Adding missing "last_validation_date" column...');
+          await db.schema.alterTable('licenses', (table) => { table.timestamp('last_validation_date').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'notes')) {
+          logger.info('   ⚙️ Adding missing "notes" column...');
+          await db.schema.alterTable('licenses', (table) => { table.text('notes').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'subscription_plan')) {
+          logger.info('   ⚙️ Adding missing "subscription_plan" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('subscription_plan').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'payment_status')) {
+          logger.info('   ⚙️ Adding missing "payment_status" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('payment_status').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'amount')) {
+          logger.info('   ⚙️ Adding missing "amount" column...');
+          await db.schema.alterTable('licenses', (table) => { table.decimal('amount', 10, 2).nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'currency')) {
+          logger.info('   ⚙️ Adding missing "currency" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('currency').nullable(); });
+        }
+        if (!await db.schema.hasColumn('licenses', 'invoice_number')) {
+          logger.info('   ⚙️ Adding missing "invoice_number" column...');
+          await db.schema.alterTable('licenses', (table) => { table.string('invoice_number').nullable(); });
+        }
+        logger.info('   -> Success: Licenses table schema is intact.');
+      }
+
       diagnostics.migrationsOk = true;
     } catch (err) {
       throw new Error(`Database migration audit failed: ${err.message}`);
