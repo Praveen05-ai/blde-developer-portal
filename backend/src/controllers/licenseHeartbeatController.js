@@ -115,7 +115,10 @@ export async function handleHeartbeat(req, res) {
     }
 
     // 5. Evaluate License Remote/Base Status
-    const statusToCheck = license.remote_status || license.status;
+    let statusToCheck = license.remote_status || license.status;
+    if (license.status === 'suspended' || license.status === 'revoked') {
+      statusToCheck = license.status;
+    }
     responsePayload.status = statusToCheck;
     responsePayload.reason = license.remote_status_reason || '';
 
