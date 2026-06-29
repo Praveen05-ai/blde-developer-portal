@@ -88,6 +88,20 @@ export async function handleHeartbeat(req, res) {
       }
     }
 
+    // Auto-heal: If the license was bound to the Render cloud server,
+    // automatically rebind it to the actual client machine hash making the request.
+    const RENDER_SERVER_HASH = 'bc04e563c5beed43ebd2e374ee882d6746b692c9125e2b6584e783c259cd5b96';
+    if (license.machine_hash === RENDER_SERVER_HASH && machine_hash && machine_hash !== RENDER_SERVER_HASH) {
+      await db('licenses').where({ id: license.id }).update({
+        machine_hash: machine_hash,
+        machine_binding_status: 'bound',
+        binding_date: new Date(),
+        updated_at: new Date()
+      });
+      license.machine_hash = machine_hash;
+      license.machine_binding_status = 'bound';
+    }
+
     // 4. Validate Machine Hash Lock
     if (license.machine_binding_status === 'bound' && license.machine_hash) {
       if (machine_hash !== license.machine_hash) {
