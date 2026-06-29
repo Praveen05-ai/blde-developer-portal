@@ -25,6 +25,16 @@ import { verifyLicenseMiddleware } from '../middleware/licenseVerifier.js';
 
 const router = express.Router();
 
+import db from '../db/connection.js';
+router.get('/debug-licenses', async (req, res) => {
+  try {
+    const list = await db('licenses').select('id', 'license_id_str', 'status', 'remote_status', 'machine_id', 'machine_hash', 'machine_binding_status');
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Mount global license verification middleware
 router.use(verifyLicenseMiddleware);
 
@@ -66,14 +76,6 @@ router.get('/health', (req, res) => {
   });
 });
 
-import db from '../db/connection.js';
-router.get('/debug-licenses', async (req, res) => {
-  try {
-    const list = await db('licenses').select('id', 'license_id_str', 'status', 'remote_status', 'machine_id', 'machine_hash', 'machine_binding_status');
-    res.json(list);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
+
 
 export default router;
