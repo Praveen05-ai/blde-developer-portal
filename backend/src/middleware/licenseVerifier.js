@@ -62,7 +62,8 @@ export async function verifyLicenseMiddleware(req, res, next) {
     path.includes('/subscriptions') ||
     path.includes('/invoices') ||
     path.includes('/payments') ||
-    path.includes('/billing-reports')
+    path.includes('/billing-reports') ||
+    path.includes('/support/sync')
   ) {
     return next();
   }
