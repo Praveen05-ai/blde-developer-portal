@@ -28,13 +28,8 @@ const router = express.Router();
 import db from '../db/connection.js';
 router.get('/debug-licenses', async (req, res) => {
   try {
-    const affected = await db('licenses').whereIn('id', [2, 3]).update({
-      machine_binding_status: 'unbound',
-      machine_hash: null
-    });
-    const list = await db('licenses').select('id', 'license_id_str', 'status', 'remote_status', 'machine_id', 'machine_hash', 'machine_binding_status', 'signature');
     const ticketsCount = await db('consultation_tickets').count('id as cnt').first();
-    res.json({ affected, list, ticketsCount });
+    res.json({ ticketsCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
