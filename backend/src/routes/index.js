@@ -32,9 +32,8 @@ router.get('/debug-licenses', async (req, res) => {
       machine_binding_status: 'unbound',
       machine_hash: null
     });
-    const deletedTicketsCount = await db('consultation_tickets').del();
     const list = await db('licenses').select('id', 'license_id_str', 'status', 'remote_status', 'machine_id', 'machine_hash', 'machine_binding_status', 'signature');
-    res.json({ affected, list, deletedTicketsCount });
+    res.json({ affected, list });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
