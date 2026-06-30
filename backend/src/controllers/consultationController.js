@@ -155,11 +155,8 @@ export const getRequests = async (req, res, next) => {
         'd.name as db_operator_name'
       );
 
-    if (env.deploymentMode === 'standalone' || env.deploymentMode === 'university') {
-      // In standalone/university client modes, always filter by the logged-in user's email
-      query = query.where('t.client_email', req.user.email);
-    } else if (req.user.role !== 'admin') {
-      // In SaaS/Server mode, non-admins (researchers) only see their own tickets
+    if (req.user.role !== 'admin' && req.user.role !== 'consultant') {
+      // Non-admins and non-consultants only see their own tickets
       query = query.where('t.client_email', req.user.email);
     }
 
