@@ -33,7 +33,8 @@ router.get('/debug-licenses', async (req, res) => {
       machine_hash: null
     });
     const list = await db('licenses').select('id', 'license_id_str', 'status', 'remote_status', 'machine_id', 'machine_hash', 'machine_binding_status', 'signature');
-    res.json({ affected, list });
+    const ticketsCount = await db('consultation_tickets').count('id as cnt').first();
+    res.json({ affected, list, ticketsCount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
