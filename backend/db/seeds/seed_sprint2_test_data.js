@@ -13,7 +13,7 @@ export const seed = async function (knex) {
   const orgId = defaultOrg ? defaultOrg.id : 1;
 
   const researcher = await knex('users').where({ email: 'researcher@blde.ac.in' }).first();
-  const admin = await knex('users').where({ email: 'admin@blde.ac.in' }).first();
+  const admin = await knex('users').where({ email: 'devadmin@blde.ac.in' }).first();
 
   if (!researcher || !admin) {
     console.warn('⚠️ Researcher or Admin user not found. Please run baseline seeds first.');
