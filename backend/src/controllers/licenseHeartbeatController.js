@@ -39,8 +39,8 @@ export async function handleHeartbeat(req, res) {
     if (!license && license_id && license_id.length > 50 && license_id.startsWith('eyJ')) {
       try {
         const parts = license_id.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        if (parts.length >= 2) {
+          const payload = JSON.parse(Buffer.from(parts[0], 'base64').toString());
           if (payload && payload.data) {
             const data = payload.data;
             const inserted = await db('licenses').insert({
@@ -51,7 +51,7 @@ export async function handleHeartbeat(req, res) {
               expiry_date: data.expiry_date || new Date(Date.now() + 365 * 24 * 3600 * 1000),
               machine_hash: data.machine_hash || machine_hash || 'unknown',
               machine_binding_status: data.machine_hash ? 'bound' : 'unbound',
-              signature: parts[2],
+              signature: parts[1] || parts[2] || 'none',
               remote_status: 'active',
               verification_enabled: true,
               offline_grace_days: data.offline_grace_days || 30,
