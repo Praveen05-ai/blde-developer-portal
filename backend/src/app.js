@@ -10,6 +10,7 @@ import apiRouter from './routes/index.js';
 import { maintenanceMiddleware } from './updater/maintenanceMode.js';
 
 const app = express();
+app.set('trust proxy', true);
 
 // Create uploads directory if not exists
 if (!fs.existsSync(env.uploads.dir)) {
